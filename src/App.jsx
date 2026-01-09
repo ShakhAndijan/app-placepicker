@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
@@ -13,15 +13,17 @@ function App() {
   const [pickedPlaces, setPickedPlaces] = useState([]);
   const [avialablePlaces, setAvialablePlaces] = useState([]);
 
-  navigator.geolocation.getCurrentPosition((position) => {
-    const sortedPlaces = sortPlacesByDistance(
-      AVAILABLE_PLACES,
-      position.coords.latitude,
-      position.coords.longitude
-    );
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const sortedPlaces = sortPlacesByDistance(
+        AVAILABLE_PLACES,
+        position.coords.latitude,
+        position.coords.longitude
+      );
 
-    setAvialablePlaces(sortedPlaces);
-  });
+      setAvialablePlaces(sortedPlaces);
+    });
+  }, []);
 
   function handleStartRemovePlace(id) {
     modal.current.open();
@@ -40,6 +42,11 @@ function App() {
       const place = AVAILABLE_PLACES.find((place) => place.id === id);
       return [place, ...prevPickedPlaces];
     });
+
+    const storedId = JSON.parse(localStorage.getItem('selectedPlaces')) || [];
+    if (storedId.indexOf(id) === -1) {
+      localStorage.setItem('selectedPlaces', JSON.stringify([id, ...storedId]));
+    }
   }
 
   function handleRemovePlace() {
@@ -76,6 +83,7 @@ function App() {
         <Places
           title="Available Places"
           places={avialablePlaces}
+          fallbackText="Sorting places bu distance ..."
           onSelectPlace={handleSelectPlace}
         />
       </main>
